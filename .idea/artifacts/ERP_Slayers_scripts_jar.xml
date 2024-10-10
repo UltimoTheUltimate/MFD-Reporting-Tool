@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="ERP Slayers scripts:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/ERP_Slayers_scripts_jar</output-path>
+    <root id="archive" name="ERP Slayers scripts.jar">
+      <element id="module-output" name="ERP Slayers scripts" />
+    </root>
+  </artifact>
+</component>
