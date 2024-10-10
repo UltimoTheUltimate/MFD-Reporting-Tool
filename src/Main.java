@@ -68,8 +68,8 @@ public class Main {
         // Adjust the result area to have more height and proper bounds
         resultArea.setBounds(50, 770, 1000, 50); // Adjusted height and position for single line display
         resultArea.setEditable(true); // Allow user editing
-        resultArea.setLineWrap(false); // Disable line wrapping
-        resultArea.setWrapStyleWord(false); // Disable wrapping by word
+        resultArea.setLineWrap(true); // Disable line wrapping
+        resultArea.setWrapStyleWord(true); // Disable wrapping by word
 
         // Add panels and result area to the frame
         frame.add(panelUsername);
