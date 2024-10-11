@@ -19,6 +19,10 @@ public class Main {
     private static JTextArea resultArea = new JTextArea(5, 50); // Set initial height to 5 rows
     private static List<Erper> erpers = new ArrayList<>();
     private static int currentIndex = 0; // Tracks the current Erper being displayed
+    private static JComboBox<String> accountTypeDropdown; // Declare dropdown menu
+
+    private static List<String> accountTypeTitles = new ArrayList<>();
+    private static List<String> accountTypeDescriptions = new ArrayList<>();
 
     public static void main(String[] args) {
         // Sample Erper objects
@@ -31,51 +35,49 @@ public class Main {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(null);
 
-        // Create panels for checkboxes with updated titles and height
-        // Create a JPanel to add to the JScrollPane
-        // Adjusted height and layout for a more compact view
-
-// Username panel
         JPanel panelUsernameContent = new JPanel();
         panelUsernameContent.setLayout(new BoxLayout(panelUsernameContent, BoxLayout.Y_AXIS)); // Set the layout of the panel
         JScrollPane panelUsername = new JScrollPane(panelUsernameContent);
         panelUsername.setBounds(50, 50, 250, 400); // Reduced height to 400px
         panelUsername.setBorder(BorderFactory.createTitledBorder("Username"));
 
-// Avatar panel
+        // Avatar panel
         JPanel panelAvatarContent = new JPanel();
         panelAvatarContent.setLayout(new BoxLayout(panelAvatarContent, BoxLayout.Y_AXIS));
         JScrollPane panelAvatar = new JScrollPane(panelAvatarContent);
         panelAvatar.setBounds(320, 50, 250, 400); // Reduced height to 400px
         panelAvatar.setBorder(BorderFactory.createTitledBorder("Avatar"));
 
-// Description panel
+        // Description panel
         JPanel panelDescriptionContent = new JPanel();
         panelDescriptionContent.setLayout(new BoxLayout(panelDescriptionContent, BoxLayout.Y_AXIS));
         JScrollPane panelDescription = new JScrollPane(panelDescriptionContent);
         panelDescription.setBounds(590, 50, 250, 400); // Reduced height to 400px
         panelDescription.setBorder(BorderFactory.createTitledBorder("Description"));
 
-// Miscellaneous panel
+        // Miscellaneous panel
         JPanel panelMiscellaneousContent = new JPanel();
         panelMiscellaneousContent.setLayout(new BoxLayout(panelMiscellaneousContent, BoxLayout.Y_AXIS));
         JScrollPane panelMiscellaneous = new JScrollPane(panelMiscellaneousContent);
         panelMiscellaneous.setBounds(860, 50, 250, 400); // Reduced height to 400px
         panelMiscellaneous.setBorder(BorderFactory.createTitledBorder("Miscellaneous"));
 
-
+        // Dropdown for account types
+        accountTypeDropdown = new JComboBox<>();
+        accountTypeDropdown.setBounds(700, 540, 100, 30); // Position the dropdown
 
         // Adjust the result area to have more height and proper bounds
-        resultArea.setBounds(50, 770, 1000, 50); // Adjusted height and position for single line display
+        resultArea.setBounds(50, 520, 1000, 50); // Adjusted height and position for single line display
         resultArea.setEditable(true); // Allow user editing
         resultArea.setLineWrap(true); // Disable line wrapping
         resultArea.setWrapStyleWord(true); // Disable wrapping by word
 
-        // Add panels and result area to the frame
+        // Add panels, dropdown, and result area to the frame
         frame.add(panelUsername);
         frame.add(panelAvatar);
         frame.add(panelDescription);
         frame.add(panelMiscellaneous);
+        frame.add(accountTypeDropdown); // Add dropdown
         frame.add(resultArea);
 
         // Read CSVs and dynamically create checkboxes for each checklist
@@ -83,7 +85,7 @@ public class Main {
         readCSVAndCreateCheckboxes(panelAvatarContent, checkBoxesAvatar, sentencesAvatar, "avatar.csv");
         readCSVAndCreateCheckboxes(panelDescriptionContent, checkBoxesDescription, sentencesDescription, "description.csv");
         readCSVAndCreateCheckboxes(panelMiscellaneousContent, checkBoxesMiscellaneous, sentencesMiscellaneous, "miscellaneous.csv");
-
+        readCSVAndPopulateDropdown("account_types.csv");
         // Button to move to the next Erper
         // Adjust the result area position and size (above buttons)
         resultArea.setBounds(50, 470, 1000, 50); // Position moved up and width adjusted
@@ -157,6 +159,11 @@ public class Main {
         addCheckboxListeners(checkBoxesMiscellaneous, sentencesMiscellaneous);
 
         frame.setVisible(true);
+
+        accountTypeDropdown.addActionListener(e -> {
+            updateResultAreaWithCheckboxes(); // Update result area when account type changes
+        });
+
     }
 
     // Helper method to add item listeners to checkboxes
@@ -185,10 +192,15 @@ public class Main {
         appendSelectedReasons(descriptionReasons, checkBoxesDescription, sentencesDescription);
         appendSelectedReasons(miscellaneousReasons, checkBoxesMiscellaneous, sentencesMiscellaneous);
 
-        // Construct the final string for the resultArea
-        reason.append("ERP ACCOUNT: ");
-        if (userReasons.length() > 0) {
+        // Get the selected index from the dropdown
+        int selectedIndex = accountTypeDropdown.getSelectedIndex();
+        if (selectedIndex >= 0 && selectedIndex < accountTypeDescriptions.size()) {
+            // Append the selected account type description
+            reason.append(accountTypeDescriptions.get(selectedIndex)).append(". ");
+        }
 
+        // Construct the final string for the resultArea
+        if (userReasons.length() > 0) {
             reason.append("In Username: ").append(userReasons.toString().trim()).append(". ");
         }
         if (avatarReasons.length() > 0) {
@@ -200,7 +212,7 @@ public class Main {
         if (miscellaneousReasons.length() > 0) {
             // Replace ', ' with '. '
             String formattedMiscellaneous = miscellaneousReasons.toString().replace(", ", ". ");
-            reason.append(formattedMiscellaneous.trim()).append(".");
+            reason.append("In Miscellaneous: ").append(formattedMiscellaneous.trim()).append(".");
         }
 
         // Set the constructed reason in the text area
@@ -214,7 +226,26 @@ public class Main {
         erpers.get(currentIndex).setReason(userInputReason); // Set the text area content as the reason for the current Erper
     }
 
-    // Read CSV and create checkboxes
+    private static void readCSVAndPopulateDropdown(String filePath) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",", 2); // Split into title and description
+                if (parts.length == 2) { // Ensure both title and description are present
+                    String title = parts[0].trim().replaceAll("^\"|\"$", ""); // Remove quotes
+                    String description = parts[1].trim().replaceAll("^\"|\"$", ""); // Remove quotes
+
+                    accountTypeTitles.add(title); // Store title for dropdown
+                    accountTypeDescriptions.add(description); // Store description
+                    accountTypeDropdown.addItem(title); // Add title to dropdown
+                }
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, "Error reading account types file: " + e.getMessage());
+        }
+    }
+
+    // Read CSV and create checkboxes   
     private static void readCSVAndCreateCheckboxes(JPanel panel, List<JCheckBox> checkBoxes, List<String> sentences, String filePath) {
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
