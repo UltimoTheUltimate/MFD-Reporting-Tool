@@ -212,7 +212,7 @@ public class Main {
         if (miscellaneousReasons.length() > 0) {
             // Replace ', ' with '. '
             String formattedMiscellaneous = miscellaneousReasons.toString().replace(", ", ". ");
-            reason.append("In Miscellaneous: ").append(formattedMiscellaneous.trim()).append(".");
+            reason.append(formattedMiscellaneous.trim()).append(".");
         }
 
         // Set the constructed reason in the text area
